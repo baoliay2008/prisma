@@ -71,7 +71,7 @@ function setupTestSuiteMatrix(
           clients.push(client)
           return client
         }
-        globalThis['prisma'] = await globalThis['newPrismaClient']()
+        globalThis['prisma'] = globalThis['newPrismaClient']()
         globalThis['Prisma'] = (await global['loaded'])['Prisma']
       })
 
