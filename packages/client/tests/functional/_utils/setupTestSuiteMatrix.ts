@@ -55,6 +55,7 @@ function setupTestSuiteMatrix(
     const describeFn = skip ? describe.skip : describe
 
     describeFn(name, () => {
+      const clients = [] as any[]
       // we inject modified env vars, and make the client available as globals
       beforeAll(async () => {
         process.env = { ...setupTestSuiteDbURI(suiteConfig), ...originalEnv }
@@ -65,19 +66,28 @@ function setupTestSuiteMatrix(
           skipDb: options?.skipDb,
         })
 
-        globalThis['prisma'] = new (await global['loaded'])['PrismaClient']()
-        globalThis['PrismaClient'] = (await global['loaded'])['PrismaClient']
+        globalThis['newPrismaClient'] = (...args) => {
+          const client = new global['loaded']['PrismaClient'](...args)
+          clients.push(client)
+          return client
+        }
+        globalThis['prisma'] = await globalThis['newPrismaClient']()
+        // globalThis['PrismaClient'] = (await global['loaded'])['PrismaClient']
         globalThis['Prisma'] = (await global['loaded'])['Prisma']
       })
 
       afterAll(async () => {
-        !options?.skipDb && (await globalThis['prisma']?.$disconnect())
+        for (const client of clients) {
+          await client.$disconnect()
+        }
+        clients.length = 0
         !options?.skipDb && (await dropTestSuiteDatabase(suiteMeta, suiteConfig))
         process.env = originalEnv
         delete globalThis['loaded']
         delete globalThis['prisma']
         delete globalThis['Prisma']
-        delete globalThis['PrismaClient']
+        delete globalThis['newPrismaClient']
+        // delete globalThis['PrismaClient']
       })
 
       tests(suiteConfig, suiteMeta)
