@@ -211,8 +211,8 @@ You may have to run ${chalk.greenBright('prisma generate')} for your changes to 
             logLevel: this.logLevel,
             configDir: this.config.cwd!,
           },
-          (err, log) => {
-            weakThis.deref()?.logger(err, log)
+          (log) => {
+            weakThis.deref()?.logger(log)
           },
         )
         engineInstanceCount++
@@ -228,10 +228,7 @@ You may have to run ${chalk.greenBright('prisma generate')} for your changes to 
     }
   }
 
-  private logger(err: string, log: string) {
-    if (err) {
-      throw err
-    }
+  private logger(log: string) {
     const event = this.parseEngineResponse<QueryEngineEvent | null>(log)
     if (!event) return
 
