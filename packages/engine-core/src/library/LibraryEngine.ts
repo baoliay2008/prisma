@@ -102,7 +102,7 @@ export class LibraryEngine extends Engine {
     }
     this.libraryInstantiationPromise = this.instantiateLibrary()
 
-    // initHooks()
+    exitHooks.install()
     this.checkForTooManyEngines()
   }
 
