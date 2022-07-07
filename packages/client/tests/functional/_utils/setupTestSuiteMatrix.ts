@@ -72,7 +72,6 @@ function setupTestSuiteMatrix(
           return client
         }
         globalThis['prisma'] = await globalThis['newPrismaClient']()
-        // globalThis['PrismaClient'] = (await global['loaded'])['PrismaClient']
         globalThis['Prisma'] = (await global['loaded'])['Prisma']
       })
 
@@ -87,7 +86,6 @@ function setupTestSuiteMatrix(
         delete globalThis['prisma']
         delete globalThis['Prisma']
         delete globalThis['newPrismaClient']
-        // delete globalThis['PrismaClient']
       })
 
       tests(suiteConfig, suiteMeta)

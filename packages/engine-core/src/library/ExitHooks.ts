@@ -5,7 +5,9 @@ export type BeforeExitListener = () => unknown
 const debug = Debug('prisma:client:libraryEngine:exitHooks')
 
 export class ExitHooks {
-  private beforeExitListeners: Map<unknown, BeforeExitListener> = new Map()
+  private nextOwnerId = 1
+  private ownerToIdMap = new WeakMap<object, number>()
+  private idToListenerMap = new Map<number, BeforeExitListener>()
   private areHooksInstalled = false
 
   install() {
@@ -21,26 +23,39 @@ export class ExitHooks {
     this.areHooksInstalled = true
   }
 
-  setListener(owner: unknown, listener: BeforeExitListener | undefined) {
+  setListener(owner: object, listener: BeforeExitListener | undefined) {
     if (listener) {
-      this.beforeExitListeners.set(owner, listener)
+      let id = this.ownerToIdMap.get(owner)
+      if (!id) {
+        id = this.nextOwnerId++
+        this.ownerToIdMap.set(owner, id)
+      }
+      this.idToListenerMap.set(id, listener)
     } else {
-      this.beforeExitListeners.delete(owner)
+      const id = this.ownerToIdMap.get(owner)
+      if (id !== undefined) {
+        this.ownerToIdMap.delete(owner)
+        this.idToListenerMap.delete(id)
+      }
     }
   }
 
-  getListener(owner: unknown): BeforeExitListener | undefined {
-    return this.beforeExitListeners.get(owner)
+  getListener(owner: object): BeforeExitListener | undefined {
+    const id = this.ownerToIdMap.get(owner)
+    if (id === undefined) {
+      return undefined
+    }
+    return this.idToListenerMap.get(id)
   }
 
   private installHook(event: string, shouldExit = false) {
     process.once(event, async (code) => {
       debug(`exit event received: ${event}`)
-      for (const listener of this.beforeExitListeners.values()) {
+      for (const listener of this.idToListenerMap.values()) {
         await listener()
       }
 
-      this.beforeExitListeners.clear()
+      this.idToListenerMap.clear()
 
       // only exit, if only we are listening
       // if there is another listener, that other listener is responsible

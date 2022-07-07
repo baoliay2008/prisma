@@ -67,7 +67,6 @@ export class LibraryEngine extends Engine {
   lastQuery?: string
   loggerRustPanic?: any
 
-  // beforeExitListener?: (args?: any) => any
   versionInfo?: {
     commit: string
     version: string
