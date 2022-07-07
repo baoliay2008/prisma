@@ -71,7 +71,9 @@ function setupTestSuiteMatrix(
           clients.push(client)
           return client
         }
-        globalThis['prisma'] = globalThis['newPrismaClient']()
+        if (!options?.skipDefaultClientInstance) {
+          globalThis['prisma'] = globalThis['newPrismaClient']()
+        }
         globalThis['Prisma'] = (await global['loaded'])['Prisma']
       })
 
