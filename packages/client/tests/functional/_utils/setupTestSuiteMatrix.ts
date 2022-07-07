@@ -79,7 +79,10 @@ function setupTestSuiteMatrix(
 
       afterAll(async () => {
         for (const client of clients) {
-          await client.$disconnect()
+          await client.$disconnect().catch(() => {
+            // sometimes we test connection errors. In that case,
+            // disconnect might also fail, so ignoring the error here
+          })
         }
         clients.length = 0
         !options?.skipDb && (await dropTestSuiteDatabase(suiteMeta, suiteConfig))
